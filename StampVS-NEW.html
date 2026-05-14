@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digital Stamp App</title>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial;
+        }
+
+        input, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stamp {
+            width: 180px;
+            aspect-ratio: 1 / 1;
+            border: 4px solid red;
+            border-radius: 50%;
+            color: red;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .stamp div {
+            width: 100%;
+            text-align: center;
+        }
+
+        .line {
+            width: 100%;
+            height: 2px;
+            background-color: red;
+        }
+
+        .date {
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="error" style="color:red;"></p>
+</div>
+
+<!-- APP -->
+<div id="appPage" class="hidden">
+    <h3>Digital Stamp</h3>
+    <input type="date" id="dateInput" onchange="updateDate()"><br>
+
+    <div class="stamp" id="stamp">
+        <div>KPTI</div>
+        <div class="line"></div>
+        <div class="date" id="dateText">--/---/--</div>
+        <div class="line"></div>
+        <div id="userName"></div>
+    </div>
+
+    <button onclick="downloadStamp()">Download JPG</button>
+    <button onclick="downloadStampPNG()">Download PNG</button>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+
+// ✅ USERS TABLE (FULLY STRUCTURED)
+const users = [
+{ username: "suprakash.dey@kcpt.co.in", password: "SUPRAKASH0850", name: "SUPRAKASH", color: "red" },
+{ username: "amit.maity@kcpt.co.in", password: "AMIT0997", name: "AMIT MAITY", color: "red" },
+{ username: "pradip.das@kcpt.co.in", password: "PRADIP0584", name: "PRADIP", color: "blue" },
+{ username: "jayanta.das@kcpt.co.in", password: "JAYANTA0153", name: "JAYANTA", color: "blue" },
+{ username: "munna.singh@kcpt.co.in", password: "MUNNA0725", name: "MUNNA", color: "blue" },
+{ username: "ramesh.mandal@kcpt.co.in", password: "RAMESH0069", name: "RAMESH", color: "blue" },
+{ username: "chiranjeet.ghose@kcpt.co.in", password: "CHIRANJEET0238", name: "CHIRANJEET", color: "green" },
+{ username: "rajesh.singh@kcpt.co.in", password: "RAJESH0020", name: "RAJESH", color: "blue" },
+{ username: "sweta.sharma@kcpt.co.in", password: "SWETA0236", name: "SWETA", color: "red" },
+{ username: "neha.singhania@kcpt.co.in", password: "NEHA0142", name: "NEHA", color: "blue" },
+{ username: "pijush.ghosh@kcpt.co.in", password: "PIJUSH0291", name: "PIJUSH", color: "blue" },
+{ username: "mahendra@kcpt.co.in", password: "MAHENDRA0486", name: "MAHENDRA", color: "blue" },
+{ username: "bindiya.sharma@kcpt.co.in", password: "BINDIYA0912", name: "BINDIYA", color: "blue" },
+{ username: "amit.patade@kcpt.co.in", password: "AMITPATADE0899", name: "AMIT PATADE", color: "blue" },
+{ username: "deepesh@kcpt.co.in", password: "DEEPESH0048", name: "DEEPESH", color: "blue" },
+{ username: "subrat.kumar@kcpt.co.in", password: "SUBRAT0461", name: "SUBRAT", color: "blue" },
+{ username: "rajnish.kumar@kcpt.co.in", password: "RAJNISH0387", name: "RAJNISH", color: "blue" },
+{ username: "ramachandra.behera@kcpt.co.in", password: "RAMA0006", name: "RAMA", color: "blue" },
+{ username: "seshadri.g@kcpt.co.in", password: "SESHADRI0697", name: "SESHADRI", color: "blue" },
+{ username: "ranjan.kaul@kcpt.co.in", password: "RANJAN0655", name: "RANJAN", color: "blue" },
+{ username: "rangasayee@kcpt.co.in", password: "RANGASAYEE0072", name: "RANGASAYEE", color: "red" },
+{ username: "santosh.pati@kcpt.co.in", password: "SANTOSH0777", name: "SANTOSH", color: "red" },
+{ username: "subhankar.ray@kcpt.co.in", password: "SUBHANKAR0159", name: "SUBHANKAR", color: "blue" },
+{ username: "kasturi.gr@kcpt.co.in", password: "KASTURI0952", name: "KASTURI", color: "blue" },
+{ username: "abhijeet.mallick@kcpt.co.in", password: "ABHIJEET0097", name: "ABHIJEET", color: "blue" },
+{ username: "debabrata.das@kcpt.co.in", password: "DEBABRATA0850", name: "DEBABRATA", color: "blue" },
+{ username: "parthasarthe@kcpt.co.in", password: "PARTHASARTHE0484", name: "PARTHASARTHE", color: "blue" },
+{ username: "hari.sharma@kcpt.co.in", password: "HARI0681", name: "HARI", color: "blue" },
+{ username: "shyam.sharma@kcpt.co.in", password: "SHYAM0770", name: "SHYAM", color: "blue" },
+{ username: "biswajit.mishra@kcpt.co.in", password: "BISWAJIT0178", name: "BISWAJIT", color: "blue" },
+{ username: "ashish.shukla@kcpt.co.in", password: "ASHISH0409", name: "ASHISH", color: "blue" },
+{ username: "vikash.kumar@kcpt.co.in", password: "VIKASH0948", name: "VIKASH", color: "blue" },
+{ username: "priyaranjan.bahera@kcpt.co.in", password: "PRIYARANJAN0738", name: "PRIYARANJAN", color: "blue" },
+{ username: "swayamsidha.swain@kcpt.co.in", password: "SWAYAMSIDHA0114", name: "SWAYAMSIDHA", color: "blue" },
+{ username: "debanuj.gupta@kcpt.co.in", password: "DEBANUJ0746", name: "DEBANUJ", color: "blue" },
+{ username: "kumar.shrawan@kcpt.co.in", password: "SHRAWAN0938", name: "SHRAWAN", color: "blue" },
+{ username: "rajakishore.moharana@kcpt.co.in", password: "RAJAKISHORE0068", name: "RAJAKISHORE", color: "blue" },
+{ username: "vikash.sahai@kcpt.co.in", password: "VIKASH0838", name: "VIKASH", color: "blue" },
+{ username: "h.karthik@kcpt.co.in", password: "KARTHIK0442", name: "KARTHIK", color: "blue" },
+{ username: "amitesh.prasad@kcpt.co.in", password: "AMITESH0277", name: "AMITESH", color: "green" },
+{ username: "nikesh.dorlikar@kcpt.co.in", password: "NIKESH0106", name: "NIKESH", color: "blue" },
+{ username: "pritpal.singh@kcpt.co.in", password: "PRITPAL0495", name: "PRITPAL", color: "blue" },
+{ username: "vjanki.ram@kcpt.co.in", password: "JANKI0358", name: "JANKI", color: "blue" },
+{ username: "ajit.gupta@kcpt.co.in", password: "AJIT0012", name: "AJIT", color: "blue" },
+{ username: "vijendra.purohit@kcpt.co.in", password: "VIJENDRA0888", name: "VIJENDRA", color: "red" },
+{ username: "sunil.gupta@kcpt.co.in", password: "SUNIL0354", name: "SUNIL", color: "blue" },
+{ username: "saurabh.choudhary@kcpt.co.in", password: "SAURABH0539", name: "SAURABH", color: "blue" },
+{ username: "saikat.mitra@kcpt.co.in", password: "SAIKAT0823", name: "SAIKAT", color: "blue" },
+{ username: "rethisree@kcpt.co.in", password: "RETHISREE0911", name: "RETHISREE", color: "blue" },
+{ username: "dinesh.gorai@kcpt.co.in", password: "DINESH0969", name: "DINESH", color: "blue" },
+{ username: "tapas.nanda@kcpt.co.in", password: "TAPAS0453", name: "TAPAS", color: "blue" },
+{ username: "ramkrishna.mondal@kcpt.co.in", password: "RAM KRISHNA0410", name: "RAM KRISHNA", color: "blue" },
+{ username: "lalan.mahato@kcpt.co.in", password: "LALAN0810", name: "LALAN", color: "blue" },
+{ username: "pranay.maity@kcpt.co.in", password: "PRANAY0981", name: "PRANAY", color: "blue" },
+{ username: "palui.haradhan@kcpt.co.in", password: "HARADHAN0531", name: "HARADHAN", color: "blue" },
+{ username: "dhiraj.kumar@kcpt.co.in", password: "DHIRAJ0247", name: "DHIRAJ", color: "blue" },
+{ username: "deepak.jena@kcpt.co.in", password: "DEEPAK0742", name: "DEEPAK", color: "blue" },
+{ username: "khagadyuti.mahato@kcpt.co.in", password: "KHAGADYUTI0271", name: "KHAGADYUTI", color: "blue" },
+{ username: "sanjay.pradhan@kcpt.co.in", password: "SANJAY0223", name: "SANJAY", color: "blue" },
+{ username: "mukesh.agarwal@kcpt.co.in", password: "MUKESH0677", name: "MUKESH", color: "blue" },
+{ username: "prakash.managooli@kcpt.co.in", password: "PRAKASH0292", name: "PRAKASH", color: "blue" },
+{ username: "manish.kumar@kcpt.co.in", password: "MANISH0619", name: "MANISH", color: "red" },
+{ username: "hitesh.singh@kcpt.co.in", password: "HITESH0027", name: "HITESH", color: "blue" },
+{ username: "bhavya.upadhyay@kcpt.co.in", password: "BHAVYA0556", name: "BHAVYA", color: "blue" },
+{ username: "sumit.arora@kcpt.co.in", password: "SUMIT0657", name: "SUMIT", color: "red" },
+{ username: "akshay.tiwari@kcpt.co.in", password: "AKSHAY0864", name: "AKSHAY", color: "blue" },
+{ username: "pranab.pattanayak@kcpt.co.in", password: "PRANAB0813", name: "PRANAB", color: "blue" },
+{ username: "swapnil.petkar@kcpt.co.in", password: "SWAPNIL0818", name: "SWAPNIL", color: "blue" },
+{ username: "ujjwal.ghosh@kcpt.co.in", password: "UJJWAL0588", name: "UJJWAL", color: "blue" },
+{ username: "dhaneshwar.mahto@kcpt.co.in", password: "DHANESHWAR0161", name: "DHANESHWAR", color: "blue" },
+{ username: "ashish.pradhan@kcpt.co.in", password: "ASHISH0637", name: "ASHISH", color: "blue" },
+{ username: "ravi.sahu@kcpt.co.in", password: "RAVI0280", name: "RAVI", color: "blue" },
+{ username: "prasenjit.mahato@kcpt.co.in", password: "PRASENJIT0176", name: "PRASENJIT", color: "blue" },
+{ username: "vidyapati.kumar@kcpt.co.in", password: "VIDYAPATI0751", name: "VIDYAPATI", color: "blue" },
+{ username: "arup.gope@kcpt.co.in", password: "ARUP0987", name: "ARUP", color: "blue" },
+{ username: "akhilesh.kumar@kcpt.co.in", password: "AKHILESH0296", name: "AKHILESH", color: "blue" },
+{ username: "ngirish@kcpt.co.in", password: "GIRISH0002", name: "GIRISH", color: "blue" },
+{ username: "sachidanand.kalindi@kcpt.co.in", password: "SACHIDANAND0071", name: "SACHIDANAND", color: "blue" },
+{ username: "tapinder.sharma@kcpt.co.in", password: "TAPINDER0177", name: "TAPINDER", color: "blue" },
+{ username: "takashi.wakamatsu@kcpt.co.in", password: "WAKAMATSU0761", name: "WAKAMATSU", color: "red" },
+{ username: "sreekanth@kcpt.co.in", password: "SREEKANTHA0277", name: "SREEKANTHA", color: "blue" },
+{ username: "santosh.anand@kcpt.co.in", password: "SANTOSH0593", name: "SANTOSH", color: "blue" },
+{ username: "suresh.mali@kcpt.co.in", password: "SURESH0856", name: "SURESH", color: "blue" },
+{ username: "ashutosh.singh@kcpt.co.in", password: "ASHUTOSH0984", name: "ASHUTOSH", color: "blue" },
+{ username: "madhusudhan.rk@kcpt.co.in", password: "MADHUSUDHAN0496", name: "MADHUSUDHAN", color: "red" },
+{ username: "paneer.selvan@kcpt.co.in", password: "PANEER0617", name: "PANEER", color: "red" },
+{ username: "vinoth.kumar@kcpt.co.in", password: "VINOTHKUMAR0813", name: "VINOTHKUMAR", color: "blue" },
+{ username: "sameera@kcpt.co.in", password: "SAMEERA0116", name: "SAMEERA", color: "blue" },
+{ username: "krishnakant.nirala@kcpt.co.in", password: "KRISHNAKANT0026", name: "KRISHNAKANT", color: "blue" },
+{ username: "manoj.kacholia@kcpt.co.in", password: "MANOJ0383", name: "MANOJ", color: "blue" },
+{ username: "manyog.prasad@kcpt.co.in", password: "MANYOG0188", name: "MANYOG", color: "blue" },
+{ username: "mayank.sethi@kcpt.co.in", password: "MAYANK0943", name: "MAYANK", color: "blue" },
+{ username: "pranab.sarkar@kcpt.co.in", password: "PRANAB0515", name: "PRANAB", color: "red" },
+{ username: "saravanan@kcpt.co.in", password: "SARAVANAN0470", name: "SARAVANAN", color: "blue" },
+{ username: "somnath.sahu@kcpt.co.in", password: "SOMNATH0827", name: "SOMNATH", color: "blue" },
+{ username: "suman.asthana@kcpt.co.in", password: "SETU0032", name: "SETU", color: "blue" },
+{ username: "amit.vimal@kcpt.co.in", password: "AMIT0350", name: "AMIT", color: "blue" },
+{ username: "uttam.bauri@kcpt.co.in", password: "UTTAM0235", name: "UTTAM", color: "blue" },
+{ username: "patitpavan.das@kcpt.co.in", password: "PATIT0516", name: "PATIT", color: "blue" },
+{ username: "abhay.gupta@kcpt.co.in", password: "ABHAY0868", name: "ABHAY", color: "blue" },
+{ username: "raja.mukherjee@kcpt.co.in", password: "RAJA0456", name: "RAJA", color: "blue" },
+{ username: "simon.marandi@kcpt.co.in", password: "SIMON0627", name: "SIMON", color: "blue" },
+{ username: "rajan.tudu@kcpt.co.in", password: "RAJAN0702", name: "RAJAN", color: "blue" },
+{ username: "prabhat.lal@kcpt.co.in", password: "PRABHAT0280", name: "PRABHAT", color: "blue" },
+{ username: "sanju.mohanta@kcpt.co.in", password: "SANJU0696", name: "SANJU", color: "blue" },
+{ username: "jagannath.kuila@kcpt.co.in", password: "JAGANNATH0529", name: "JAGANNATH", color: "blue" },
+{ username: "bindeswar.mahato@kcpt.co.in", password: "BINDESHWAR0356", name: "BINDESHWAR", color: "blue" },
+{ username: "sunil.murmu@kcpt.co.in", password: "SUNIL0341", name: "SUNIL", color: "blue" },
+{ username: "ratanlal.sethi@kcpt.co.in", password: "RATAN0788", name: "RATAN", color: "blue" },
+{ username: "ranjeet.pathak@kcpt.co.in", password: "RANJEET0891", name: "RANJEET", color: "blue" },
+{ username: "naresh.panchal@kcpt.co.in", password: "PANCHAL0097", name: "PANCHAL", color: "blue" },
+{ username: "kuldip.singh@kcpt.co.in", password: "KULDIP0729", name: "KULDIP", color: "blue" },
+{ username: "raghuram.mk@kcpt.co.in", password: "RAGHURAM0930", name: "RAGHURAM", color: "red" },
+{ username: "shiva.prasad@kcpt.co.in", password: "SHIVAPRASAD0293", name: "SHIVAPRASAD", color: "blue" },
+{ username: "g.pramodh@kcpt.co.in", password: "PRAMODH0389", name: "PRAMODH", color: "blue" },
+{ username: "kumar.ashutosh@kcpt.co.in", password: "ASHUTOSH0970", name: "ASHUTOSH", color: "blue" },
+{ username: "vishnu.mu@kcpt.co.in", password: "VISHNU0285", name: "VISHNU", color: "blue" },
+{ username: "tatsuhiro.morita@kcpt.co.in", password: "TATSUHIRO0136", name: "TATSUHIRO", color: "red" },
+{ username: "pratik.bhavsar@kcpt.co.in", password: "PRATIK0419", name: "PRATIK", color: "blue" },
+{ username: "rajat.goswami@kcpt.co.in", password: "RAJAT0376", name: "RAJAT", color: "red" },
+{ username: "sharanpreet.kaur@kcpt.co.in", password: "SHARANPREET0082", name: "SHARANPREET", color: "blue" },
+{ username: "sowmyasri.ds@kcpt.co.in", password: "SOWMYASRI0359", name: "SOWMYASRI", color: "blue" },
+{ username: "pandiyan.t@kcpt.co.in", password: "THALAKKUPPANDIAN0511", name: "THALAKKUPPANDIAN", color: "blue" },
+{ username: "nakul.subhash@kcpt.co.in", password: "NAKUL0920", name: "NAKUL", color: "blue" },
+{ username: "ranjith.kumar@kcpt.co.in", password: "RANJITH0477", name: "RANJITH", color: "blue" },
+{ username: "srinath.b@kcpt.co.in", password: "SRINATH0941", name: "SRINATH", color: "blue" },
+{ username: "neeraj.ojha@kcpt.co.in", password: "NEERAJ0471", name: "NEERAJ", color: "blue" },
+{ username: "girijakanta.pradhan@kcpt.co.in", password: "GIRIJAKANTA0082", name: "GIRIJAKANTA", color: "blue" },
+{ username: "takeyuki.sakama@kcpt.co.in", password: "SAKAMA0401", name: "SAKAMA", color: "red" },
+{ username: "sanjiv.kittur@kcpt.co.in", password: "SANJIV0076", name: "SANJIV", color: "blue" },
+{ username: "sribash.jana@kcpt.co.in", password: "SRIBASH0110", name: "SRIBASH", color: "blue" },
+{ username: "kedar.suryavanshi@kcpt.co.in", password: "KEDAR0121", name: "KEDAR", color: "blue" },
+{ username: "prakash.kumar@kcpt.co.in", password: "PRAKASH0060", name: "PRAKASH", color: "blue" },
+{ username: "maloti.kumari@kcpt.co.in", password: "MALOTI0076", name: "MALOTI", color: "blue" },
+{ username: "kamakhya.prasad@kcpt.co.in", password: "KAMAKHYA0915", name: "KAMAKHYA", color: "blue" },
+{ username: "manjeet.prasad@kcpt.co.in", password: "MANJEET0162", name: "MANJEET", color: "blue" },
+{ username: "sushanti.tudu@kcpt.co.in", password: "SUSHANTI0659", name: "SUSHANTI", color: "blue" },
+{ username: "sunaram.tiu@kcpt.co.in", password: "SUNARAM0748", name: "SUNARAM", color: "blue" },
+{ username: "ravi.dubey@kcpt.co.in", password: "RAVI0463", name: "RAVI", color: "blue" },
+{ username: "vishal.kumar@kcpt.co.in", password: "VISHAL0299", name: "VISHAL", color: "blue" },
+{ username: "yash.pravin@kcpt.co.in", password: "GHODASARA0619", name: "GHODASARA", color: "blue" },
+{ username: "shashidhar.m@kcpt.co.in", password: "SHASHIDHAR0296", name: "SHASHIDHAR", color: "blue" },
+{ username: "shinji.mitsumoto@kcpt.co.in", password: "SHINJI0098", name: "SHINJI", color: "blue" },
+{ username: "sharma.ravi@kcpt.co.in", password: "RAVI0344", name: "RAVI", color: "red" },
+{ username: "bapun.patra@kcpt.co.in", password: "BAPUN0952", name: "BAPUN", color: "blue" },
+{ username: "mantu.maiti@kcpt.co.in", password: "MANTU0228", name: "MANTU", color: "blue" },
+{ username: "piyush.sadudia@kcpt.co.in", password: "PIYUSH0462", name: "PIYUSH", color: "blue" },
+{ username: "aakash.roy@kcpt.co.in", password: "AAKASH0181", name: "AAKASH", color: "blue" },
+{ username: "pugazh.bharathi@kcpt.co.in", password: "PUGAZHENDHI0450", name: "PUGAZHENDHI", color: "blue" },
+{ username: "hazra.pradip@kcpt.co.in", password: "PRADIP0616", name: "PRADIP", color: "blue" },
+{ username: "sashi.sahoo@kcpt.co.in", password: "SASHI0562", name: "SASHI", color: "blue" },
+{ username: "anshu.sinha@kcpt.co.in", password: "ANSHU0561", name: "ANSHU", color: "blue" },
+{ username: "sukhram.munda@kcpt.co.in", password: "SUKHRAM0639", name: "SUKHRAM", color: "blue" },
+{ username: "angad.singh@kcpt.co.in", password: "ANGAD0256", name: "ANGAD", color: "blue" },
+{ username: "jaydeb.mahata@kcpt.co.in", password: "JAYDEB0753", name: "JAYDEB", color: "blue" },
+{ username: "anil.singh@kcpt.co.in", password: "ANIL0139", name: "ANIL", color: "blue" },
+{ username: "sujit.kumar@kcpt.co.in", password: "SUJIT0649", name: "SUJIT", color: "blue" },
+{ username: "rimpi.banik@kcpt.co.in", password: "RIMPI0386", name: "RIMPI", color: "blue" },
+{ username: "kumar.sumeet@kcpt.co.in", password: "SUMEET0176", name: "SUMEET", color: "blue" },
+{ username: "suhas.warke@kcpt.co.in", password: "SUHAS0909", name: "SUHAS", color: "red" },
+{ username: "gowtham@kcpt.co.in", password: "KOTTAPALLI0544", name: "KOTTAPALLI", color: "blue" },
+{ username: "kiran@kcpt.co.in", password: "KIRAN0406", name: "KIRAN", color: "blue" },
+{ username: "dwivedi.ashutosh@kcpt.co.in", password: "ASHUTOSH0762", name: "ASHUTOSH", color: "blue" },
+{ username: "shubham.kumar@kcpt.co.in", password: "SHUBHAM0780", name: "SHUBHAM", color: "blue" },
+{ username: "deepak.ramola@kcpt.co.in", password: "DEEPAK0132", name: "DEEPAK", color: "blue" },
+{ username: "maharshi.de@kcpt.co.in", password: "MAHARSHI0223", name: "MAHARSHI", color: "red" },
+{ username: "shosei.goto@kcpt.co.in", password: "GOTO0351", name: "GOTO", color: "red" },
+
+// 👉 Add more users here using same format if needed
+];
+
+let currentUser = null;
+
+// ✅ LOGIN
+function login() {
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value;
+
+    const user = users.find(x =>
+        x.username.toLowerCase() === u.toLowerCase() && x.password === p
+    );
+
+    if (user) {
+        currentUser = user;
+
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("appPage").classList.remove("hidden");
+
+        document.getElementById("userName").innerText = user.name.toUpperCase();
+        applyStampColor(user.color.toLowerCase());
+
+    } else {
+        document.getElementById("error").innerText = "Invalid email or password!";
+    }
+}
+
+// ✅ APPLY COLOR
+function applyStampColor(color) {
+    const stamp = document.getElementById("stamp");
+
+    stamp.style.borderColor = color;
+    stamp.style.color = color;
+
+    const lines = stamp.querySelectorAll(".line");
+    lines.forEach(line => line.style.backgroundColor = color);
+}
+
+// ✅ LOGOUT
+function logout() {
+    location.reload();
+}
+
+// ✅ AUTO DATE
+window.onload = () => {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("dateInput").value = today;
+    updateDate();
+};
+
+// ✅ DATE FORMAT
+function formatDate(dateStr) {
+    if (!dateStr) return "--/---/--";
+
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+
+    const months = ["JAN","FEB","MAR","APR","MAY","JUN",
+                    "JUL","AUG","SEP","OCT","NOV","DEC"];
+
+    const month = months[d.getMonth()];
+    const year = String(d.getFullYear()).slice(-2);
+
+    return `${day}/${month}/${year}`;
+}
+
+// ✅ UPDATE DATE
+function updateDate() {
+    const val = document.getElementById("dateInput").value;
+    if (!val) return;
+
+    document.getElementById("dateText").innerText = formatDate(val);
+}
+
+// ✅ DOWNLOAD JPG
+function downloadStamp() {
+    const stamp = document.getElementById("stamp");
+
+    html2canvas(stamp, { scale: 3 }).then(canvas => {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/jpeg", 1.0);
+        link.download = "stamp.jpg";
+        link.click();
+    });
+}
+
+// ✅ DOWNLOAD PNG
+function downloadStampPNG() {
+    const stamp = document.getElementById("stamp");
+
+    html2canvas(stamp, { scale: 3 }).then(canvas => {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "stamp.png";
+        link.click();
+    });
+}
+
+</script>
+
+</body>
+</html>
