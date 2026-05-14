@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digital Stamp App</title>
+
+    <!-- html2canvas -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial;
+        }
+
+        input, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        .stamp {
+            width: 180px;
+            aspect-ratio: 1 / 1;
+            border: 4px solid red;
+            border-radius: 50%;
+            color: red;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .stamp div {
+            width: 100%;
+            text-align: center;
+        }
+
+        .line {
+            width: 100%;
+            height: 2px;
+            background-color: red;
+        }
+
+        .date {
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h3>Digital Stamp</h3>
+
+<input type="date" id="dateInput" onchange="updateDate()"><br>
+
+<div class="stamp" id="stamp">
+    <div>KPTI</div>
+    <div class="line"></div>
+    <div class="date" id="dateText">--/---/--</div>
+    <div class="line"></div>
+    <div id="userName">Loading...</div>
+</div>
+
+<button onclick="downloadStamp()">Download JPG</button>
+
+<script>
+
+// ✅ Fetch logged-in SharePoint user
+function getSharePointUser() {
+    fetch("/_api/web/currentuser", {
+        headers: {
+            "Accept": "application/json;odata=verbose"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userName = data.d.Title; // Display Name
+        document.getElementById("userName").innerText = userName;
+    })
+    .catch(error => {
+        console.log("User fetch failed:", error);
+        document.getElementById("userName").innerText = "User";
+    });
+}
+
+// ✅ Auto load user + date
+window.onload = function() {
+    getSharePointUser();
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("dateInput").value = today;
+    updateDate();
+};
+
+// ✅ Date formatting
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const months = ["JAN","FEB","MAR","APR","MAY","JUN",
+                    "JUL","AUG","SEP","OCT","NOV","DEC"];
+    const month = months[d.getMonth()];
+    const year = String(d.getFullYear()).slice(-2);
+
+    return `${day}/${month}/${year}`;
+}
+
+function updateDate() {
+    const val = document.getElementById("dateInput").value;
+    if (!val) return;
+    document.getElementById("dateText").innerText = formatDate(val);
+}
+
+// ✅ Download stamp
+function downloadStamp() {
+    const stamp = document.getElementById("stamp");
+
+    html2canvas(stamp).then(canvas => {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/jpeg", 1.0);
+        link.download = "stamp.jpg";
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
+
+</script>
+
+</body>
+</html>
