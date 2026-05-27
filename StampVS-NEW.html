@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,10 +33,9 @@
             justify-content: space-evenly;
             align-items: center;
             font-weight: bold;
-            overflow: hidden;
         }
 
-       /* ✅ Bigger KPTI */
+        /* ✅ Bigger KPTI */
         .title {
             font-size: 22px;
         }
@@ -64,10 +64,8 @@
     <input type="date" id="dateInput" onchange="updateDate()"><br>
 
     <div class="stamp" id="stamp">
-        <div>KPTI</div>
-        <div class="line"></div>
-        <div class="date" id="dateText">--/---/--</div>
-        <div class="line"></div>
+        <div class="title">KPTI</div>
+        <div class="date" id="dateText">DD  MMM  YYYY</div>
         <div id="userName"></div>
     </div>
 
@@ -77,6 +75,7 @@
 </div>
 
 <script>
+
 
 // ✅ USERS TABLE (FULLY STRUCTURED)
 const users = [
@@ -310,9 +309,9 @@ function formatDate(dateStr) {
                     "JUL","AUG","SEP","OCT","NOV","DEC"];
 
     const month = months[d.getMonth()];
-    const year = String(d.getFullYear());
+    const year = String(d.getFullYear())
 
-    return `${day}  {month}  ${year}`;
+    return `${day}  ${month}  ${year}`;
 }
 
 // ✅ UPDATE DATE
